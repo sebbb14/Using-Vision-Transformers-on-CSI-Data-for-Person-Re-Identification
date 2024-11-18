@@ -29,11 +29,11 @@ def calculate_signature(csv_original):
     file_name = csv_original.split("/")[-1][0:-4]
     csv_original = open(csv_original, mode = 'r')
 
-    # create a new csv file and save the filtered rows inside
-    csv_filtered = open(directory + "/" + (file_name + "_filtered.csv"), mode = "w", newline='')
-    csv_writer = csv.writer(csv_filtered)
+    # create a new csv file and save the csi_data rows inside
+    csi_data_csv = open(directory + "/" + (file_name + "_csi_data.csv"), mode = "w", newline='')
+    csv_writer = csv.writer(csi_data_csv)
 
-    # create the filtered csv 
+    # creating the csi_data csv
     for i, line in enumerate(csv_original):
         try:
             if i == 0: # intestation row
@@ -42,17 +42,17 @@ def calculate_signature(csv_original):
             line = line.split("\"")
 
             # delete this line if you work with original csv and uncomment csi_data = line[-2][1:-1].split(",")
-            # line = line[0].split(",")
+            line = line[0].split(",")
 
 
             if len(line) < 2:
                 print(f"Skipping row {i} due to unexpected format: {line}")
                 continue
 
-            csi_data = line[-2][1:-1].split(",")
+            # csi_data = line[-2][1:-1].split(",")
 
             # calculate_raw_amplitudes_and_phases returns the amplitude and phases for each trasmitted packets
-            packet_amplitudes, packet_phases = calculate_raw_amplitudes_and_phases(csi_data[10:N], subcarriers) # do not consider the initial 5 values (img, real)
+            packet_amplitudes, packet_phases = calculate_raw_amplitudes_and_phases(line[10:N], subcarriers) # do not consider the initial 5 values (img, real)
 
             # add the packet amplitudes to amplitude_matrix
             amplitude_matrix.append(packet_amplitudes)
@@ -61,15 +61,15 @@ def calculate_signature(csv_original):
             phase_matrix.append(packet_phases)
 
             # format again in str and save only 128 values into new csv
-            # result = ",".join(csi_data[0:N])
-            # csv_writer.writerow([result])
+            result = ",".join(line[0:N])
+            csv_writer.writerow([result])
         
         except Exception as e:
             print(f"Error processing row {i}: {e}")
 
     # close the files
     csv_original.close()
-    csv_filtered.close()
+    csi_data_csv.close()
 
     # sanitize the amplitude matrix -> delete outliers and apply median filter
     sanitized_amplitude_matrix = sanitize_amplitude_matrix(np.array(amplitude_matrix))
@@ -84,7 +84,6 @@ def calculate_signature(csv_original):
     # calculate the feature vector with a cnn vgg-16 and convert it into numpy array
     vgg_features = feature_map_vector(heatmap_resized).detach().numpy().flatten()
     signature = list(vgg_features) # create a signature
-
 
     for i in range(np.array(phase_matrix).shape[1]):  # Loop through each subcarrier (column)
         subcarrier_values = np.array(phase_matrix)[:, i]  # Extract column (subcarrier data)
@@ -118,16 +117,15 @@ def process_all_csv_in_folder(folder_path):
 
     # Check if any filtered file already exists in the folder
     for filename in os.listdir(folder_path):
-        if filename.endswith("_filtered.csv"):
+        if filename.endswith("_csi_data.csv"):
             print(f"Filtered file already exists: {filename}")
             continue  # Skip to the next file
 
-    # If a filtered file exists, do not stop but continue processing other files
+    # If a csi_data_csv file exists, do not stop but continue processing other files
     for filename in os.listdir(folder_path):
         file_path = os.path.join(folder_path, filename)
-        
-        # Process if it's a CSV file and not already a filtered one
-        if filename.endswith(".csv") and not filename.endswith("_filtered.csv"):
+
+        if filename.endswith(".csv") and not filename.endswith("_csi_data.csv"):
 
             signature = calculate_signature(file_path)  # return the signature for a single csv_file
             all_signatures.append(signature) # creating the matrix with all the signatures
@@ -138,7 +136,7 @@ def process_all_csv_in_folder(folder_path):
 
 
 if __name__ == "__main__":
-    process_all_csv_in_folder("") # change with your dataset's path
+    process_all_csv_in_folder("/Users/sebastiandinu/Desktop/Tesi-Triennale/dataset_ridotto") # change with your dataset's path
 
     all_signatures = np.array(all_signatures) # convert into a numpy array
 
