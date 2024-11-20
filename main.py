@@ -13,10 +13,13 @@ from sklearn.preprocessing import StandardScaler
 from scipy.stats import skew, kurtosis
 from sklearn.decomposition import PCA
 
+from kmeans import kmeans_algorithm
+
 N = 128 # from 384 values to 128 (csi data)
 n_packets = 200 # re-dimension the raw data
 subcarriers = 64
 all_signatures = []
+all_labels = []
 
 def calculate_signature(csv_original):
 
@@ -129,6 +132,9 @@ def process_all_csv_in_folder(folder_path):
 
             signature = calculate_signature(file_path)  # return the signature for a single csv_file
             all_signatures.append(signature) # creating the matrix with all the signatures
+            all_labels.append(file_path.split("/")[-2:-1][0] + "-" + filename.split("/")[-1])
+            print(all_labels)
+
             print(f"Processing {file_path}")
 
         elif os.path.isdir(file_path):
@@ -136,13 +142,26 @@ def process_all_csv_in_folder(folder_path):
 
 
 if __name__ == "__main__":
-    process_all_csv_in_folder("/Users/sebastiandinu/Desktop/Tesi-Triennale/dataset_ridotto") # change with your dataset's path
 
-    all_signatures = np.array(all_signatures) # convert into a numpy array
+    # process_all_csv_in_folder("/Users/sebastiandinu/Desktop/Tesi-Triennale/Dataset Re-Id") # change with your dataset's path
 
     # Replace NaNs values with zeros
-    signatures = np.nan_to_num(all_signatures, nan=0.0, posinf=0.0, neginf=0.0)
+    # signatures = np.nan_to_num(np.array(all_signatures), nan=0.0, posinf=0.0, neginf=0.0)
 
+    # save the signatures on a txt file
+    # np.savetxt("signatures.txt", signatures, fmt='%f', delimiter=',')
+    # np.savetxt("labels.txt", np.array(all_labels), fmt='%s')
+
+    signatures = np.loadtxt("signatures.txt", delimiter=',')
+
+    # Read the file to identify problematic rows
+    with open("signatures.txt", "r") as file:
+        for i, line in enumerate(file, start=1):
+            columns = line.strip().split()
+            print(f"Row {i}: {len(columns)} columns")
+
+    print(signatures.shape)
+    # clustering code
     # Normalize the features
     scaler = StandardScaler()
     signatures_normalized = scaler.fit_transform(signatures)
@@ -153,3 +172,6 @@ if __name__ == "__main__":
 
     # this method shows the elbow graph to decide the best number of clusters
     elbow_method_plot(pca_features)
+
+    # shows kmeans algorithm plot
+    kmeans_algorithm(pca_features, 10)
