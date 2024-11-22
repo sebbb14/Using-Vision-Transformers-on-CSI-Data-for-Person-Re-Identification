@@ -3,31 +3,56 @@ import tensorflow as tf
 from tensorflow.keras import layers, models
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.model_selection import train_test_split
 
-# Parameters
-n_packets = 200  # Example, for raw data reference if needed (can be ignored if irrelevant)
+def randomize_data(X, y):
+    # Combine X (signatures) and y (labels) for consistent shuffling
+    combined = list(zip(X, y))
+    np.random.shuffle(combined)  # Randomly shuffle the combined list
+
+    # Unpack the shuffled data back into X and y
+    X_shuffled, y_shuffled = zip(*combined)
+    return np.array(X_shuffled), np.array(y_shuffled)
+
+
+def split_data_balanced(X, y, train_ratio=0.8):
+    unique_labels = np.unique(y)
+    X_train, X_test, y_train, y_test = [], [], [], []
+
+    for label in unique_labels:
+        # Extract indices of all samples for the current label
+        label_indices = np.where(y == label)[0]
+        label_X = X[label_indices]
+        label_y = y[label_indices]
+
+        # Split data for the current label
+        train_X, test_X, train_y, test_y = train_test_split(
+            label_X, label_y, train_size=train_ratio, random_state=42
+        )
+
+        # Append the results
+        X_train.extend(train_X)
+        X_test.extend(test_X)
+        y_train.extend(train_y)
+        y_test.extend(test_y)
+
+    # Convert to numpy arrays
+    return np.array(X_train), np.array(X_test), np.array(y_train), np.array(y_test)
 
 
 def load_data_from_txt(file_path, label_path=None):
-    """
-    Load pose signatures and optional labels from a txt file.
 
-    Args:
-        file_path (str): Path to the txt file containing 2D NumPy array (features).
-        label_path (str): Path to the txt file containing labels (if available).
-
-    Returns:
-        Tuple[np.ndarray, np.ndarray]: Features (X) and labels (y).
-    """
     # Load signatures from the txt file
     X = np.loadtxt(file_path, delimiter=',')
 
     # Optionally load labels
     if label_path:
         labels = np.loadtxt(label_path, dtype=str)
+
+        # convert the labels into a 1d numpy array
         y = np.array([''.join(row) for row in labels])
 
-        label_encoder = LabelEncoder()
+        label_encoder = LabelEncoder() # converts string labels name into integers
         y = label_encoder.fit_transform(y)
 
     else:
@@ -37,16 +62,19 @@ def load_data_from_txt(file_path, label_path=None):
     scaler = StandardScaler()
     X = scaler.fit_transform(X)
 
-
+    print(X.shape)
+    print(X[350][0:3], print(X[349][0:3]))
     return X, y
 
-
-# Build a CNN model for classification
-def build_simple_model(input_shape, num_classes):
+def build_improved_model(input_shape, num_classes):
     model = models.Sequential([
         layers.Input(shape=input_shape),
+        layers.Dense(64, activation='relu'),
+        layers.BatchNormalization(),
+        layers.Dropout(0.5),
         layers.Dense(32, activation='relu'),
-        layers.Dropout(0.5),  # Add dropout to avoid overfitting
+        layers.BatchNormalization(),
+        layers.Dropout(0.3),
         layers.Dense(num_classes, activation='softmax')
     ])
     model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
@@ -62,26 +90,24 @@ if __name__ == "__main__":
     # Load data
     X, y = load_data_from_txt(signatures_file, labels_file)
 
-
-
     if y is None:
         print("Labels not provided. Please include a label file for supervised training.")
     else:
-        # Perform stratified random split
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=42, shuffle=True
-        )
 
-        print("Train and test singnatures used: ", X_train.shape, X_test.shape)
+        X_train, X_test, y_train, y_test = split_data_balanced(X, y)
+        X_train, y_train = randomize_data(X_train, y_train)
+
+
         np.savetxt("y_train.txt", y_train, fmt='%s')
         np.savetxt("y_test.txt", y_test, fmt='%s')
 
         # Build and train the model
         input_shape = X_train.shape[1:]
-        num_classes = len(np.unique(y))
-        model = build_simple_model(input_shape, num_classes)
+        num_classes = len(np.unique(y)) # total number of labels unique()
+        model = build_improved_model(X_train.shape[1:], len(np.unique(y)))
 
-        model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=30, batch_size=32)
+
+        model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=50 , batch_size=32)
 
         # Evaluate the model
         test_loss, test_accuracy = model.evaluate(X_test, y_test)

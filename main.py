@@ -6,14 +6,9 @@ import numpy as np
 from csi_data import *
 from scipy.ndimage import gaussian_filter
 from cnn import *
-
-# libraries for clustering
 from elbow import *
-from sklearn.preprocessing import StandardScaler
 from scipy.stats import skew, kurtosis
-from sklearn.decomposition import PCA
 
-from kmeans import kmeans_algorithm
 
 N = 128 # from 384 values to 128 (csi data)
 n_packets = 200 # re-dimension the raw data
@@ -153,25 +148,3 @@ if __name__ == "__main__":
     # np.savetxt("labels.txt", np.array(all_labels), fmt='%s')
 
     signatures = np.loadtxt("signatures.txt", delimiter=',')
-
-    # Read the file to identify problematic rows
-    with open("signatures.txt", "r") as file:
-        for i, line in enumerate(file, start=1):
-            columns = line.strip().split()
-            print(f"Row {i}: {len(columns)} columns")
-
-    print(signatures.shape)
-    # clustering code
-    # Normalize the features
-    scaler = StandardScaler()
-    signatures_normalized = scaler.fit_transform(signatures)
-
-    # Apply PCA Principal Component Analysis
-    pca = PCA(n_components=2)
-    pca_features = pca.fit_transform(signatures_normalized) # return a numpy vector shape(poses, n_components)
-
-    # this method shows the elbow graph to decide the best number of clusters
-    elbow_method_plot(pca_features)
-
-    # shows kmeans algorithm plot
-    kmeans_algorithm(pca_features, 10)
