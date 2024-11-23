@@ -1,14 +1,10 @@
-
-import os
 import csv
 
-import numpy as np
-
-from csi_data import *
 from scipy.ndimage import gaussian_filter
+
 from cnn import *
-from scipy.stats import skew, kurtosis
-from sanification import *
+from csi_data import *
+from lstm import *
 from plots import *
 
 N = 128 # from 384 values to 128 (csi data)
@@ -78,29 +74,15 @@ def calculate_signature(csv_original):
     vgg_features = feature_map_vector(heatmap_resized).detach().numpy().flatten()
     signature = list(vgg_features) # create a signature
 
-    #for i in range(np.array(phase_matrix).shape[1]):  # Loop through each subcarrier (column)
-        #bsubcarrier_values = np.array(phase_matrix)[:, i]  # Extract column (subcarrier data)
-
-        # Apply your sanitization function here
-        # _, filtered_subcarrier = sanitize_phase_data(subcarrier_values)
-
-        #stats = [np.mean(filtered_subcarrier),
-        #        np.var(filtered_subcarrier),
-        #        skew(filtered_subcarrier),
-        #        kurtosis(filtered_subcarrier),
-        #        np.min(filtered_subcarrier),
-        #        np.max(filtered_subcarrier),
-        #        np.std(filtered_subcarrier)
-        # ]
-
-        # signature += stats
-
     # work on phase matrix
     phase_matrix_sanitize = sanitize_phase_matrix(np.array(phase_matrix), np.arange(0, subcarriers))
 
     # phase plot (original, sanitized, filtered) with index subcarrier = 0
-    plot_phase_processing(np.array(phase_matrix), file_name, directory)
+    # plot_phase_processing(np.array(phase_matrix), file_name, directory)
 
+    lstm_feature = lstm_features(phase_matrix_sanitize)
+
+    signature.extend(list(lstm_feature))
     return signature
 
 def process_all_csv_in_folder(folder_path):
@@ -136,13 +118,14 @@ def process_all_csv_in_folder(folder_path):
 
 if __name__ == "__main__":
 
-    process_all_csv_in_folder("/Users/sebastiandinu/Desktop/Tesi-Triennale/dataset") # change with your dataset's path
+    # process_all_csv_in_folder("/Users/sebastiandinu/Desktop/Tesi-Triennale/dataset") # change with your dataset's path
 
     # Replace NaNs values with zeros
     # signatures = np.nan_to_num(np.array(all_signatures), nan=0.0, posinf=0.0, neginf=0.0)
 
     # save the signatures on a txt file
-    np.savetxt("signatures.txt", all_signatures, fmt='%f', delimiter=',')
-    np.savetxt("labels.txt", np.array(all_labels), fmt='%s')
+    # np.savetxt("signatures.txt", all_signatures, fmt='%f', delimiter=',')
+    # np.savetxt("labels.txt", np.array(all_labels), fmt='%s')
 
     signatures = np.loadtxt("signatures.txt", delimiter=',')
+

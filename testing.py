@@ -116,7 +116,7 @@ if __name__ == "__main__":
         model = model_cnn(X_train.shape[1:], len(np.unique(y)))
 
 
-        model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=20 , batch_size=32)
+        model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=200 , batch_size=32)
 
         # Evaluate the model
         test_loss, test_accuracy = model.evaluate(X_test, y_test)
