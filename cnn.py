@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 import torchvision.models as models
-from PIL import Image
 import torchvision.transforms as transforms
 from torchvision.models import VGG16_Weights
 

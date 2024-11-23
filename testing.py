@@ -62,22 +62,30 @@ def load_data_from_txt(file_path, label_path=None):
     scaler = StandardScaler()
     X = scaler.fit_transform(X)
 
-    print(X.shape)
-    print(X[350][0:3], print(X[349][0:3]))
+
     return X, y
 
-def build_improved_model(input_shape, num_classes):
+
+def model_cnn(input_shape, num_classes):
     model = models.Sequential([
-        layers.Input(shape=input_shape),
+        # Flatten the input data (e.g., if using image-like data)
+        layers.Flatten(input_shape=input_shape),
+
+        # Fully connected layer
         layers.Dense(64, activation='relu'),
-        layers.BatchNormalization(),
-        layers.Dropout(0.5),
-        layers.Dense(32, activation='relu'),
-        layers.BatchNormalization(),
-        layers.Dropout(0.3),
+
+
+        # Output layer with softmax for classification
         layers.Dense(num_classes, activation='softmax')
+
+
     ])
-    model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+
+    # Compile the model with basic settings
+    model.compile(optimizer='adam',
+                  loss='sparse_categorical_crossentropy',
+                  metrics=['accuracy'])
+
     return model
 
 
@@ -96,6 +104,7 @@ if __name__ == "__main__":
 
         X_train, X_test, y_train, y_test = split_data_balanced(X, y)
         X_train, y_train = randomize_data(X_train, y_train)
+        X_test, y_test = randomize_data(X_test, y_test)
 
 
         np.savetxt("y_train.txt", y_train, fmt='%s')
@@ -104,10 +113,10 @@ if __name__ == "__main__":
         # Build and train the model
         input_shape = X_train.shape[1:]
         num_classes = len(np.unique(y)) # total number of labels unique()
-        model = build_improved_model(X_train.shape[1:], len(np.unique(y)))
+        model = model_cnn(X_train.shape[1:], len(np.unique(y)))
 
 
-        model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=50 , batch_size=32)
+        model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=20 , batch_size=32)
 
         # Evaluate the model
         test_loss, test_accuracy = model.evaluate(X_test, y_test)

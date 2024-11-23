@@ -4,7 +4,7 @@ import os
 from sanification import *
 from PIL import Image
 
-def plot_phase_processing(phase_matrix, file_name, directory, subcarrier_index=0, clip_range=0.5, median_filter_size=5):
+def plot_phase_processing(phase_matrix, file_name, directory, subcarrier_index=0):
     """
     Plots the raw, sanitized, and median-filtered phases of a single subcarrier from the phase matrix.
     
@@ -27,9 +27,7 @@ def plot_phase_processing(phase_matrix, file_name, directory, subcarrier_index=0
     raw_phase_data = phase_matrix[:, subcarrier_index]
 
     # Sanitize the phase data
-    sanitized_phase_data, filtered_phase_data = sanitize_phase_data(
-        raw_phase_data, clip_range=clip_range, median_filter_size=median_filter_size
-    )
+    sanitized_phase_data = sanitize_phase_matrix(phase_matrix, np.arange(0, phase_matrix.shape[1]))[:, subcarrier_index]
 
     # Step 1: Plot Raw Phase Data
     plt.figure(figsize=(12, 4))
@@ -41,11 +39,6 @@ def plot_phase_processing(phase_matrix, file_name, directory, subcarrier_index=0
     plt.subplot(1, 3, 2, polar=True)
     plt.scatter(sanitized_phase_data, np.ones_like(sanitized_phase_data), color='red', s=10)
     plt.title("(b) Sanitized Phase")
-
-    # Step 3: Plot Median Filtered Phase Data
-    plt.subplot(1, 3, 3, polar=True)
-    plt.scatter(filtered_phase_data, np.ones_like(filtered_phase_data), color='green', s=10)
-    plt.title("(c) Median Filtered Phase")
 
     # Save the plot
     # plt.savefig(plot_path, format='png', dpi=300, bbox_inches='tight')
@@ -61,7 +54,7 @@ def plot_phase_processing(phase_matrix, file_name, directory, subcarrier_index=0
 def heatmap_plot_processing(amplitude_matrix, file_name, directory):
 
     # Define the path for the heatmap image
-    heatmap_path = os.path.join(directory, f"{file_name}_plot.png")
+    heatmap_path = os.path.join(directory, f"{file_name}_heatmap.png")
     
     # Check if the plot already exists
     if os.path.exists(heatmap_path):
@@ -95,9 +88,11 @@ def heatmap_plot_processing(amplitude_matrix, file_name, directory):
 def heatmap_vgg16(amplitude_matrix): 
     plt.imshow(amplitude_matrix, cmap='jet')  # Use a color map like 'viridis' or 'hot'
     plt.axis('off')
+
+    # saving at the same path the png will change after each csv processing
     plt.savefig('heatmap.png', bbox_inches='tight', pad_inches=0)  # Save as image without axes
 
-    # Load saved image and prepare as input for VGG-16
+    # Load saved image and prepare as input for VGG-16 -> the resolution it's always 125x369?
     heatmap_image = Image.open('heatmap.png').convert('RGB')  # Convert to 3-channel RGB image
     heatmap_image = heatmap_image.resize((224, 224))  # Resize to 224x224 for VGG-16
 

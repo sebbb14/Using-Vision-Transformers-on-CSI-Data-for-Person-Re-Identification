@@ -1,55 +1,90 @@
 
-
 import numpy as np
 from scipy.ndimage import median_filter
+from scipy.signal import medfilt
 
-def sanitize_amplitude_matrix(amplitude_matrix, clip_stddev=3, filter_size=5):
+def sanitize_and_median_filter(data, window_size, filter_size):
     """
-    Sanitizes a matrix of amplitude values by removing outliers and applying a median filter.
-    
+    Performs a two-step processing procedure:
+    1. Detects and replaces outliers in CSI data (artifact reduction).
+    2. Applies a median filter over the entire matrix.
+
     Parameters:
-    - amplitude_matrix: 2D numpy array of amplitude values (rows: time frames or antenna pairs, columns: subcarriers)
-    - clip_stddev: Standard deviation multiplier for outlier clipping (default: 3)
-    - filter_size: Size of the median filter window (default: 3)
-    
+        data (ndarray): Input 2D data array (packets × subcarriers).
+        window_size (int): Size of the sliding window for outlier detection.
+        filter_size (int): Size of the window for median filtering.
+
     Returns:
-    - sanitized_matrix: 2D numpy array of sanitized amplitude values
+        ndarray: Processed 2D data after artifact reduction and median filtering.
+    """
+    # Step 1: Outlier detection and replacement
+    def sanitize_column(column, window_size):
+        """
+        Detects and replaces local outliers in a single column (subcarrier).
+        """
+        sanitized_column = column.copy()
+        for i in range(len(column)):
+            start_idx = max(0, i - window_size // 2)
+            end_idx = min(len(column), i + window_size // 2 + 1)
+            window = column[start_idx:end_idx]
+
+            # Compute local median and MAD
+            local_median = np.median(window)
+            mad = np.median(np.abs(window - local_median))
+
+            # Detect outlier
+            if mad == 0:
+                continue
+            threshold = 3 * mad
+            if abs(column[i] - local_median) > threshold:
+                sanitized_column[i] = sanitized_column[i - 1] if i > 0 else local_median
+        return sanitized_column
+
+    # Apply sanitization column-wise
+    data = np.array(data)
+    for col_idx in range(data.shape[1]):
+        data[:, col_idx] = sanitize_column(data[:, col_idx], window_size)
+
+    # Step 2: Apply median filtering to the entire matrix
+    processed_data = median_filter(data, size=filter_size, mode='reflect')
+
+    return processed_data
+
+
+def sanitize_phase_matrix(phase_matrix, subcarrier_indices, filter_kernel_size=3):
+    """
+    Perform phase sanitization on a 2D phase matrix by removing linear distortion (slope and offset)
+    and applying median filtering.
+
+    Args:
+        phase_matrix (np.ndarray): 2D array (packets x subcarriers) of measured phases.
+        subcarrier_indices (np.ndarray): 1D array of corresponding indices (m_k) for subcarriers.
+
+    Returns:
+        np.ndarray: Sanitized phase matrix after calibration and filtering.
     """
 
-    # Step 1: Outlier Removal (Clipping)
-    mean = np.mean(amplitude_matrix)
-    std = np.std(amplitude_matrix)
-    lower_bound = mean - clip_stddev * std
-    upper_bound = mean + clip_stddev * std
-    
-    # Clip values outside the range
-    clipped_matrix = np.clip(amplitude_matrix, lower_bound, upper_bound)
-    
-    # Step 2: Median Filtering
-    # Apply median filter row-wise to reduce noise while preserving the main trends
-    sanitized_matrix = median_filter(clipped_matrix, size=(1, filter_size))
+    # Ensure subcarrier indices are a numpy array
+    subcarrier_indices = np.array(subcarrier_indices)
+
+    # Initialize the sanitized matrix
+    sanitized_matrix = np.zeros_like(phase_matrix)
+
+    # Iterate over each row (packet) in the phase matrix
+    for i, phases in enumerate(phase_matrix):
+        # Compute the slope (a) for the current packet
+        slope = (phases[-1] - phases[0]) / (subcarrier_indices[-1] - subcarrier_indices[0])
+
+        # Compute the offset (b) for the current packet
+        offset = np.mean(phases)
+
+        # Calibrate the phases for the current packet
+        calibrated_phases = phases - slope * subcarrier_indices - offset
+
+        # Apply median filtering (using a simple 1D convolution for smoothing)
+        sanitized_phases = medfilt(calibrated_phases, kernel_size=filter_kernel_size)
+
+        # Store the sanitized phases in the matrix
+        sanitized_matrix[i, :] = sanitized_phases
 
     return sanitized_matrix
-
-
-def sanitize_phase_data(phase_data, clip_range=0.5, median_filter_size=5):
-    """
-    Sanitizes phase data by clipping outliers and applying a median filter.
-    
-    Parameters:
-    - phase_data: 1D numpy array of phase values for a single subcarrier over time.
-    - clip_range: Range around the mean for clipping outliers (default: 0.5).
-    - median_filter_size: Size of the window for the median filter (default: 5).
-    
-    Returns:
-    - sanitized_phase_data: Phase data after clipping.
-    - filtered_phase_data: Phase data after applying median filter.
-    """
-    # Step 1: Clip phase data around the mean to reduce outliers
-    mean_phase = np.mean(phase_data)
-    sanitized_phase_data = np.clip(phase_data, mean_phase - clip_range, mean_phase + clip_range)
-    
-    # Step 2: Apply median filter to smooth the phase data
-    filtered_phase_data = median_filter(sanitized_phase_data, size=median_filter_size)
-    
-    return sanitized_phase_data, filtered_phase_data
