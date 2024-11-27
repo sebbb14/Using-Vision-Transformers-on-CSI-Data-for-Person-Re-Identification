@@ -29,6 +29,7 @@ def plot_phase_processing(phase_matrix, file_name, directory, subcarrier_index=0
     # Sanitize the phase data
     sanitized_phase_data = sanitize_phase_matrix(phase_matrix, np.arange(0, phase_matrix.shape[1]))[:, subcarrier_index]
 
+
     # Step 1: Plot Raw Phase Data
     plt.figure(figsize=(12, 4))
     plt.subplot(1, 3, 1, polar=True)

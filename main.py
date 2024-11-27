@@ -36,12 +36,12 @@ def calculate_signature(csv_original):
             line = line.split("\"")
 
             # delete this line if you work with original csv and uncomment csi_data = line[-2][1:-1].split(",")
-            # line = line[0].split(",")
+            line = line[0].split(",")
 
-            csi_data = line[-2][1:-1].split(",")
+            # csi_data = line[-2][1:-1].split(",")
 
             # calculate_raw_amplitudes_and_phases returns the amplitude and phases for each trasmitted packet
-            packet_amplitudes, packet_phases = calculate_raw_amplitudes_and_phases(csi_data, subcarriers)
+            packet_amplitudes, packet_phases = calculate_raw_amplitudes_and_phases(line, subcarriers)
 
             # add the packet amplitudes to amplitude_matrix
             amplitude_matrix.append(packet_amplitudes)
@@ -75,7 +75,7 @@ def calculate_signature(csv_original):
     signature = list(vgg_features) # create a signature
 
     # work on phase matrix
-    phase_matrix_sanitize = sanitize_phase_matrix(np.array(phase_matrix), np.arange(0, subcarriers))
+    phase_matrix_sanitize = sanitize_phase_matrix(np.array(phase_matrix), np.arange(0, subcarriers-1))
 
     # phase plot (original, sanitized, filtered) with index subcarrier = 0
     # plot_phase_processing(np.array(phase_matrix), file_name, directory)
@@ -108,8 +108,6 @@ def process_all_csv_in_folder(folder_path):
             signature = calculate_signature(file_path)  # return the signature for a single csv_file
             all_signatures.append(signature) # creating the matrix with all the signatures
             all_labels.append(file_path.split("/")[-2])
-            print(file_path.split("/")[-2])
-
             print(f"Processing {file_path}")
 
         elif os.path.isdir(file_path):
@@ -118,14 +116,14 @@ def process_all_csv_in_folder(folder_path):
 
 if __name__ == "__main__":
 
-    # process_all_csv_in_folder("/Users/sebastiandinu/Desktop/Tesi-Triennale/dataset") # change with your dataset's path
+    process_all_csv_in_folder("/Users/sebastiandinu/Desktop/Tesi-Triennale/dataset ridotto") # change with your dataset's path
 
     # Replace NaNs values with zeros
     # signatures = np.nan_to_num(np.array(all_signatures), nan=0.0, posinf=0.0, neginf=0.0)
 
     # save the signatures on a txt file
-    # np.savetxt("signatures.txt", all_signatures, fmt='%f', delimiter=',')
-    # np.savetxt("labels.txt", np.array(all_labels), fmt='%s')
+    np.savetxt("signatures.txt", all_signatures, fmt='%f', delimiter=',')
+    np.savetxt("labels.txt", np.array(all_labels), fmt='%s')
 
-    signatures = np.loadtxt("signatures.txt", delimiter=',')
+
 
