@@ -1,7 +1,7 @@
 import csv
 
-from scipy.ndimage import gaussian_filter
 
+from scipy.ndimage import gaussian_filter
 from cnn import *
 from csi_data import *
 from lstm import *
@@ -12,6 +12,7 @@ n_packets = 200 # re-dimension the raw data
 subcarriers = 64
 all_signatures = []
 all_labels = []
+
 
 def calculate_signature(csv_original):
 
@@ -36,12 +37,16 @@ def calculate_signature(csv_original):
             line = line.split("\"")
 
             # delete this line if you work with original csv and uncomment csi_data = line[-2][1:-1].split(",")
-            line = line[0].split(",")
+            # line = line[0].split(",")
 
-            # csi_data = line[-2][1:-1].split(",")
+            csi_data = line[-2][1:-1].split(",")[:N] # csi_data contains 128 values
 
             # calculate_raw_amplitudes_and_phases returns the amplitude and phases for each trasmitted packet
-            packet_amplitudes, packet_phases = calculate_raw_amplitudes_and_phases(line, subcarriers)
+            packet_amplitudes, packet_phases = calculate_raw_amplitudes_and_phases(csi_data)
+
+            # filter and delete the initial and final parts of phase and amplitudes values because 0
+            packet_amplitudes = packet_amplitudes[subcarriers//2 - 15: subcarriers//2 + 15]
+            packet_phases = packet_phases[subcarriers//2 - 15 : subcarriers//2 + 15]
 
             # add the packet amplitudes to amplitude_matrix
             amplitude_matrix.append(packet_amplitudes)
@@ -50,7 +55,7 @@ def calculate_signature(csv_original):
             phase_matrix.append(packet_phases)
 
             # format again in str and save only 128 values into new csv
-            result = ",".join(line[0:N])
+            result = ",".join(csi_data)
             csv_writer.writerow([result])
         
         except Exception as e:
@@ -60,25 +65,27 @@ def calculate_signature(csv_original):
     csv_original.close()
     csi_data_csv.close()
 
-    # sanification amplitude and phase matrix
-    amplitude_matrix = sanitize_and_median_filter(amplitude_matrix[0:n_packets], 5, 5)
+    # here the phase and amplitude matrix will have (packet_trasmitted x 30) shape
+
+    # sanification amplitude and phase matrix (add slice with n_packets if you want to filter the heatmap)
+    amplitude_matrix = sanitize_and_median_filter(amplitude_matrix, 5, 5)
     smooth_matrix = gaussian_filter(amplitude_matrix, sigma=1.5)  # Additional smoothing step
 
     # plot heatmap and save it into the person folder
-    heatmap_plot_processing(smooth_matrix, file_name, directory)
+    heatmap_plot_processing(smooth_matrix[:n_packets], file_name, directory)
 
     # convert the image into a 224x224 png for the vgg-16 method even the png is saved at a different resolution
-    heatmap_resized = heatmap_vgg16(smooth_matrix)
+    heatmap_resized = heatmap_png(smooth_matrix)
 
     # calculate the feature vector with a cnn vgg-16 and convert it into numpy array
     vgg_features = feature_map_vector(heatmap_resized).detach().numpy().flatten()
-    signature = list(vgg_features) # create a signature
+    signature = list(vgg_features) # create a signature list
 
-    # work on phase matrix
-    phase_matrix_sanitize = sanitize_phase_matrix(np.array(phase_matrix), np.arange(0, subcarriers-1))
+    # work on phase matrix -> np.arange create a 0,N sorted array
+    phase_matrix_sanitize = sanitize_phase_matrix(np.array(phase_matrix), np.arange(0, len(phase_matrix[0])))
 
     # phase plot (original, sanitized, filtered) with index subcarrier = 0
-    # plot_phase_processing(np.array(phase_matrix), file_name, directory)
+    plot_phase_processing(np.array(phase_matrix), file_name, directory)
 
     lstm_feature = lstm_features(phase_matrix_sanitize)
 
@@ -86,9 +93,7 @@ def calculate_signature(csv_original):
     return signature
 
 def process_all_csv_in_folder(folder_path):
-    """
-    Function to iterate over all CSV files in a folder and process them.
-    """
+
     # Check if the folder exists
     if not os.path.isdir(folder_path):
         return  # Folder doesn't exist, return early
@@ -116,7 +121,7 @@ def process_all_csv_in_folder(folder_path):
 
 if __name__ == "__main__":
 
-    process_all_csv_in_folder("/Users/sebastiandinu/Desktop/Tesi-Triennale/dataset ridotto") # change with your dataset's path
+    process_all_csv_in_folder("/Users/sebastiandinu/Desktop/Tesi-Triennale/dataset") # change with your dataset's path
 
     # Replace NaNs values with zeros
     # signatures = np.nan_to_num(np.array(all_signatures), nan=0.0, posinf=0.0, neginf=0.0)

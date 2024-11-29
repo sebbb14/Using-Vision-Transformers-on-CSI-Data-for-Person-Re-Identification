@@ -2,7 +2,7 @@ import numpy as np
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense
 
-def lstm_features(phase_matrix, lstm_units=50, output_dim=512):
+def lstm_features(phase_matrix, lstm_units=50, output_dim=256):
     """
     Process a phase matrix with shape (packets, subcarriers) through an LSTM model.
 

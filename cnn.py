@@ -11,6 +11,7 @@ class VGG16_FeatureExtractor(nn.Module):
         super(VGG16_FeatureExtractor, self).__init__()
         # Load the pre-trained VGG-16 model
         vgg16 = models.vgg16(weights=VGG16_Weights.DEFAULT)
+
         # Use the layers up to the last max-pooling layer
         self.features = nn.Sequential(*list(vgg16.features.children())[:-1])  # Exclude classification layers
         
@@ -20,7 +21,7 @@ class VGG16_FeatureExtractor(nn.Module):
             nn.Linear(512 * 14 * 14, 1024),  # 25088 matches the VGG-16 output feature size for 224x224 input
             nn.ReLU(),
             nn.Dropout(0.5),
-            nn.Linear(1024, 512)  # Final feature map vector size (256 as an example)
+            nn.Linear(1024, 256)  # Final feature map vector size (256 as an example)
         )
 
     def forward(self, x):

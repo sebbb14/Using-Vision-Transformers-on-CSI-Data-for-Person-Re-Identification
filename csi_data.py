@@ -2,17 +2,13 @@
 import math
 import numpy as np
 
-def calculate_raw_amplitudes_and_phases(csi_data, n_subcarriers):
+def calculate_raw_amplitudes_and_phases(csi_data):
 
     amplitudes = []
     phases = []
 
     i = 0
-    while i != len(csi_data) - 2:
-
-        # limit the number of subcarriers showed in the heatmap
-        if i / 2 == n_subcarriers:
-            return amplitudes, phases
+    while i != len(csi_data):
         
         img = int(csi_data[i])
         real = int(csi_data[i+1])

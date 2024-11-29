@@ -42,7 +42,7 @@ def sanitize_and_median_filter(data, window_size, filter_size):
 
     # Apply sanitization column-wise
     data = np.array(data)
-    for col_idx in range(data.shape[1]):
+    for col_idx in range(data.shape[1]): # 30 subcarriers
         data[:, col_idx] = sanitize_column(data[:, col_idx], window_size)
 
     # Step 2: Apply median filtering to the entire matrix
@@ -65,7 +65,7 @@ def sanitize_phase_matrix(phase_matrix, subcarrier_indices, filter_kernel_size=3
     """
 
     # Ensure subcarrier indices are a numpy array
-    subcarrier_indices = np.array(subcarrier_indices)
+    subcarrier_indices = np.array(subcarrier_indices) # [0,1,2, ..., 30]
 
     # Initialize the sanitized matrix
     sanitized_matrix = np.zeros_like(phase_matrix)
