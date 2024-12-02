@@ -1,27 +1,26 @@
 import csv
-
-
+import os
 from scipy.ndimage import gaussian_filter
-from cnn import *
+from tensorboard.plugins.image.summary import image
+
 from csi_data import *
-from lstm import *
+from sanification import *
 from plots import *
 
 N = 128 # from 384 values to 128 (csi data)
 n_packets = 200 # re-dimension the raw data
 subcarriers = 64
-all_signatures = []
-all_labels = []
 
-
-def calculate_signature(csv_original):
+def calculate_amplitude_phase_matrix(csv_original):
 
     # initialize the amplitude and phase matrix
     amplitude_matrix = []
     phase_matrix = []
+
+    # save the current directory
     directory = os.path.dirname(csv_original)
     
-    # read the csv file
+    # read the original csv file
     file_name = csv_original.split("/")[-1][0:-4]
     csv_original = open(csv_original, mode = 'r')
 
@@ -66,31 +65,18 @@ def calculate_signature(csv_original):
     csi_data_csv.close()
 
     # here the phase and amplitude matrix will have (packet_trasmitted x 30) shape
-
     # sanification amplitude and phase matrix (add slice with n_packets if you want to filter the heatmap)
     amplitude_matrix = sanitize_and_median_filter(amplitude_matrix, 5, 5)
     smooth_matrix = gaussian_filter(amplitude_matrix, sigma=1.5)  # Additional smoothing step
 
     # plot heatmap and save it into the person folder
     heatmap_plot_processing(smooth_matrix[:n_packets], file_name, directory)
-
-    # convert the image into a 224x224 png for the vgg-16 method even the png is saved at a different resolution
-    heatmap_resized = heatmap_png(smooth_matrix)
-
-    # calculate the feature vector with a cnn vgg-16 and convert it into numpy array
-    vgg_features = feature_map_vector(heatmap_resized).detach().numpy().flatten()
-    signature = list(vgg_features) # create a signature list
+    heatmap_image = heatmap_png(smooth_matrix)
 
     # work on phase matrix -> np.arange create a 0,N sorted array
     phase_matrix_sanitize = sanitize_phase_matrix(np.array(phase_matrix), np.arange(0, len(phase_matrix[0])))
 
-    # phase plot (original, sanitized, filtered) with index subcarrier = 0
-    plot_phase_processing(np.array(phase_matrix), file_name, directory)
-
-    lstm_feature = lstm_features(phase_matrix_sanitize)
-
-    signature.extend(list(lstm_feature))
-    return signature
+    return heatmap_image, phase_matrix_sanitize
 
 def process_all_csv_in_folder(folder_path):
 
@@ -109,26 +95,26 @@ def process_all_csv_in_folder(folder_path):
         file_path = os.path.join(folder_path, filename)
 
         if filename.endswith(".csv") and not filename.endswith("_csi_data.csv"):
+            heatmap_image, phase_matrix_sanitize = calculate_amplitude_phase_matrix(file_path)
 
-            signature = calculate_signature(file_path)  # return the signature for a single csv_file
-            all_signatures.append(signature) # creating the matrix with all the signatures
-            all_labels.append(file_path.split("/")[-2])
+            # work in progress
+            label = file_path.split("/")[-2] # Francesca
+            # complete folder dataset_heatmap creation
+
+
             print(f"Processing {file_path}")
 
         elif os.path.isdir(file_path):
             process_all_csv_in_folder(file_path)
 
-
 if __name__ == "__main__":
 
     process_all_csv_in_folder("/Users/sebastiandinu/Desktop/Tesi-Triennale/dataset") # change with your dataset's path
 
-    # Replace NaNs values with zeros
-    # signatures = np.nan_to_num(np.array(all_signatures), nan=0.0, posinf=0.0, neginf=0.0)
 
-    # save the signatures on a txt file
-    np.savetxt("signatures.txt", all_signatures, fmt='%f', delimiter=',')
-    np.savetxt("labels.txt", np.array(all_labels), fmt='%s')
+
+
+
 
 
 
