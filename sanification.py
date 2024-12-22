@@ -50,7 +50,6 @@ def sanitize_and_median_filter(data, window_size, filter_size):
 
     return processed_data
 
-
 def sanitize_phase_matrix(phase_matrix, subcarrier_indices, filter_kernel_size=3):
     """
     Perform phase sanitization on a 2D phase matrix by removing linear distortion (slope and offset)

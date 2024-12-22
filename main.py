@@ -1,8 +1,9 @@
 import csv
 import os
+import numpy as np
 from scipy.ndimage import gaussian_filter
 from tensorboard.plugins.image.summary import image
-
+import torch
 from csi_data import *
 from sanification import *
 from plots import *
@@ -10,7 +11,29 @@ from plots import *
 N = 128 # from 384 values to 128 (csi data)
 n_packets = 200 # re-dimension the raw data
 subcarriers = 64
+all_phase_matrix = []
+all_labels = []
+all_heatmaps = []
 
+
+# the function below updated the phase matrix changing the seq_lenght to max_len
+def pad_sequences(sequences, max_len):
+    padded_sequences = []
+    for seq in sequences:
+        # Calculate how many zeros need to be added
+        padding_size = max_len - seq.shape[0]
+
+        if padding_size > 0:
+            # Create a tensor of zeros to pad the sequence
+            padding = torch.zeros(padding_size, seq.shape[1])  # (padding_size, feature_dim)
+            padded_seq = torch.cat((seq, padding), dim=0)  # Append padding
+        else:
+            padded_seq = seq  # No padding needed if seq_len >= max_len
+        padded_sequences.append(padded_seq)
+
+    return torch.stack(padded_sequences)
+
+# the function below calculate the phase and amplitude matrix and sanitize them
 def calculate_amplitude_phase_matrix(csv_original):
 
     # initialize the amplitude and phase matrix
@@ -44,8 +67,11 @@ def calculate_amplitude_phase_matrix(csv_original):
             packet_amplitudes, packet_phases = calculate_raw_amplitudes_and_phases(csi_data)
 
             # filter and delete the initial and final parts of phase and amplitudes values because 0
-            packet_amplitudes = packet_amplitudes[subcarriers//2 - 15: subcarriers//2 + 15]
-            packet_phases = packet_phases[subcarriers//2 - 15 : subcarriers//2 + 15]
+            # packet_amplitudes = packet_amplitudes[subcarriers//2 - 15: subcarriers//2 + 15]
+            # packet_phases = packet_phases[subcarriers//2 - 15 : subcarriers//2 + 15]
+
+            packet_amplitudes = packet_amplitudes[0:subcarriers]
+            packet_phases = packet_phases[0:subcarriers]
 
             # add the packet amplitudes to amplitude_matrix
             amplitude_matrix.append(packet_amplitudes)
@@ -97,10 +123,17 @@ def process_all_csv_in_folder(folder_path):
         if filename.endswith(".csv") and not filename.endswith("_csi_data.csv"):
             heatmap_image, phase_matrix_sanitize = calculate_amplitude_phase_matrix(file_path)
 
-            # work in progress
-            label = file_path.split("/")[-2] # Francesca
-            # complete folder dataset_heatmap creation
+            print(phase_matrix_sanitize.shape)
+            all_phase_matrix.append(torch.tensor(phase_matrix_sanitize))
+            # save the heatmap
+            heatmap_image.save("/Users/sebastiandinu/Desktop/Tesi-Triennale/re-identification-csi/dataset_heatmap/" + folder_path.split("/")[-1] + "/" + filename[:-4] + ".png")
 
+            label = file_path.split("/")[-2] # Francesca
+            # save the heatmaps and the label
+            all_heatmaps.append(heatmap_image)
+            print(all_heatmaps)
+            all_labels.append(label)
+            # complete folder dataset_heatmap creation
 
             print(f"Processing {file_path}")
 
@@ -110,6 +143,34 @@ def process_all_csv_in_folder(folder_path):
 if __name__ == "__main__":
 
     process_all_csv_in_folder("/Users/sebastiandinu/Desktop/Tesi-Triennale/dataset") # change with your dataset's path
+
+    # work on all_phase_matrix -> padding the arrays to the max trasmitted_packets value
+    max_seq_len = max(seq.shape[0] for seq in all_phase_matrix)  # Determine max seq_len (10 in this case)
+    padded_data = pad_sequences(all_phase_matrix, max_seq_len)
+    torch.save(padded_data, "phase_padded.pt") # save the batch matrix (35, max_len_seq, 64)
+
+    print("phase_padded max len_seq: ", padded_data.shape[1])
+    # save all the labels into a txt file as numpy array
+    np.save("labels", all_labels)
+    print(all_labels)
+    np.save("heatmaps", np.array(all_heatmaps))
+
+    # Load the tensor from the .pt file
+    loaded_tensor = torch.load("phase_padded.pt")
+
+    # 0 Francesca
+    # 1 Federica
+    # 2 Federico
+    # 3 Sebastian
+    # 4 Mara
+
+
+
+
+
+
+
+
 
 
 

@@ -44,7 +44,6 @@ def plot_phase_processing(phase_matrix, file_name, directory, subcarrier_index=0
     plt.pause(2)           # Pause for 2 seconds
     plt.close()
 
-
 def heatmap_plot_processing(amplitude_matrix, file_name, directory):
 
     # Define the path for the heatmap image
@@ -73,7 +72,6 @@ def heatmap_plot_processing(amplitude_matrix, file_name, directory):
 
     # Show the plot briefly
     plt.show()  # Show plot without blocking code execution
-
 
 # This function takes the heatmap amplitude as matrix (already sanitized) and convert it into a (224, 224) RGB image
 def heatmap_png(amplitude_matrix):
