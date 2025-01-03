@@ -67,7 +67,7 @@ if __name__ == "__main__":
     data = np.load("./saved_features_concatenated/epoch_100_embeddings.npy")
 
 
-    combined = torch.load("/Users/sebastiandinu/Desktop/Tesi-Triennale/re-identification-csi/combined/checkpoints_199.pt")
+    combined = torch.load("/Users/sebastiandinu/Library/Mobile Documents/com~apple~CloudDocs/01 Projects/Tesi/re-identification-csi/combined/checkpoints_199.pt")
     data = combined["embeddings"].detach().numpy()
     last_labels = combined["labels"].detach().numpy()
     print(last_labels)
@@ -75,12 +75,12 @@ if __name__ == "__main__":
 
 
     # new embeddings calculated after training
-    data = torch.load("/Users/sebastiandinu/Desktop/Tesi-Triennale/re-identification-csi/all_embeddings.pt")
+    data = torch.load("/Users/sebastiandinu/Library/Mobile Documents/com~apple~CloudDocs/01 Projects/Tesi/re-identification-csi/all_embeddings.pt")
     data = np.array([x.squeeze() for x in data])
     # data = np.load("./saved_features_concatenated/epoch_100_embeddings.npy")
     # data = torch.load("/Users/sebastiandinu/Desktop/Tesi-Triennale/re-identification-csi/.pt")
 
-    last_labels = np.load("/Users/sebastiandinu/Desktop/Tesi-Triennale/re-identification-csi/labels.npy")
+    last_labels = np.load("/Users/sebastiandinu/Library/Mobile Documents/com~apple~CloudDocs/01 Projects/Tesi/re-identification-csi/labels.npy")
     print(last_labels)
     print(data.shape)
 

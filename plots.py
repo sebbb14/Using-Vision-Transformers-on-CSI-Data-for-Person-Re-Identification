@@ -5,7 +5,7 @@ import numpy as np
 from sanification import *
 from PIL import Image
 
-def plot_phase_processing(phase_matrix, file_name, directory, subcarrier_index=0):
+def plot_phase_processing(phase_matrix, file_name, directory, subcarrier_index=40):
 
     # Define the path for the heatmap image
     plot_path = os.path.join(directory, f"{file_name}_phase_plot.png")

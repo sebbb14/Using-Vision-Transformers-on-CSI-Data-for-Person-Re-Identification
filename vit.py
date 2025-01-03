@@ -14,27 +14,27 @@ import matplotlib.pyplot as plt
 
 
 class HeatmapViT(nn.Module):
-    def __init__(self, image_size, patch_size, num_classes, num_attention_heads=8):
+    def __init__(self, image_size, patch_size, num_classes):
         super().__init__()
         vit_config = ViTConfig(
             image_size=image_size,
             patch_size=patch_size,
             num_channels=3,  # Single-channel heatmap images
             num_labels=num_classes,
-            num_attention_heads=4,  # Explicitly set attention heads
-            hidden_size=128  # Set your desired number of features here (multiple of 12 = attention heads)
+            num_attention_heads=8,  # Explicitly set attention heads
+            hidden_size=256  # Set your desired number of features here (multiple of 12 = attention heads)
         )
         self.vit = ViTModel(vit_config)
         self.fc = nn.Linear(self.vit.config.hidden_size, num_classes) # classification layer
         # Add dropout for regularization
-        self.dropout = nn.Dropout(p=0.3)
+        # self.dropout = nn.Dropout(p=0.5)
 
     def forward(self, x):
         outputs = self.vit(pixel_values=x)
         # Take the CLS token representation (first token)
         cls_token_embedding = outputs.last_hidden_state[:, 0]
         # Apply dropout to embeddings
-        cls_token_embedding = self.dropout(cls_token_embedding)
+        # cls_token_embedding = self.dropout(cls_token_embedding)
 
         return cls_token_embedding
 

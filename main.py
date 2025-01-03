@@ -142,7 +142,7 @@ def process_all_csv_in_folder(folder_path):
 
 if __name__ == "__main__":
 
-    process_all_csv_in_folder("/Users/sebastiandinu/Desktop/Tesi-Triennale/dataset") # change with your dataset's path
+    process_all_csv_in_folder("/Users/sebastiandinu/Library/Mobile Documents/com~apple~CloudDocs/01 Projects/Tesi/dataset") # change with your dataset's path
 
     # work on all_phase_matrix -> padding the arrays to the max trasmitted_packets value
     max_seq_len = max(seq.shape[0] for seq in all_phase_matrix)  # Determine max seq_len (10 in this case)

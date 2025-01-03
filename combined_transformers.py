@@ -137,14 +137,14 @@ if __name__ == '__main__':
 
     # Initialize models
     vit_model = HeatmapViT(image_size=224, patch_size=16, num_classes=5) # ViT model
-    temporal_transformer = TemporalTransformer(feature_dim=128) # temporal transformer
-    combined_model = CombinedReIDModel(vit_model, temporal_transformer, output_dim=256)  # Final combined model
+    temporal_transformer = TemporalTransformer(feature_dim=256) # temporal transformer
+    combined_model = CombinedReIDModel(vit_model, temporal_transformer, output_dim=512)  # Final combined model
 
     # Loss function (triplet loss or contrastive loss for re-identification)
-    triplet_loss = TripletLoss(margin=0.6)
+    triplet_loss = TripletLoss(margin=0.5)
 
     # Optimizer
-    optimizer = torch.optim.Adam(combined_model.parameters(), lr=0.001)
+    optimizer = torch.optim.Adam(combined_model.parameters(), lr=0.0001)
 
     batch_size = 35
     train_loader = get_data(batch_size)
