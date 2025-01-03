@@ -1,0 +1,13 @@
+\begin{figure}[htp]
+        \centering
+        \includegraphics[width=8cm]{Immagini/mossa6_heatmap.png}
+        \caption{Esempio plot mappa di calore}
+        \label{fig:heatmap}
+    \end{figure}
+
+    \begin{figure}[htp]
+        \centering
+        \includegraphics[width=8cm]{Immagini/heatmap_3D.png}
+        \caption{Esempio plot 3D mappa di calore}
+        \label{fig:heatmap}
+    \end{figure}

@@ -120,20 +120,20 @@ if "__main__" == __name__:
 
     # calculate the heatmap and phase matrix of a pose -> here I should use the testing dataset instead of a single csv file
     sequences = []
-    heatmap1, phase_matrix1 = calculate_amplitude_phase_matrix("/Users/sebastiandinu/Library/Mobile Documents/com~apple~CloudDocs/01 Projects/Tesi/re-identification-csi/posa1.csv")
-    heatmap2, phase_matrix2 = calculate_amplitude_phase_matrix("/Users/sebastiandinu/Library/Mobile Documents/com~apple~CloudDocs/01 Projects/Tesi/re-identification-csi/mossa1.csv")
-    heatmap3, phase_matrix3 = calculate_amplitude_phase_matrix("/Users/sebastiandinu/Library/Mobile Documents/com~apple~CloudDocs/01 Projects/Tesi/re-identification-csi/posa1_federico.csv")
+    heatmap1, phase_matrix1 = calculate_amplitude_phase_matrix("/Users/sebastiandinu/Library/Mobile Documents/com~apple~CloudDocs/01 Projects/Tesi/re-identification-csi/testing/posa1.csv")
+    heatmap2, phase_matrix2 = calculate_amplitude_phase_matrix("/Users/sebastiandinu/Library/Mobile Documents/com~apple~CloudDocs/01 Projects/Tesi/re-identification-csi/testing/mossa1.csv")
+    heatmap3, phase_matrix3 = calculate_amplitude_phase_matrix("/Users/sebastiandinu/Library/Mobile Documents/com~apple~CloudDocs/01 Projects/Tesi/re-identification-csi/testing/posa1_federico.csv")
 
     # mara e federica
-    heatmap4, phase_matrix4 = calculate_amplitude_phase_matrix("/Users/sebastiandinu/Library/Mobile Documents/com~apple~CloudDocs/01 Projects/Tesi/re-identification-csi/mossa5_mara.csv")
-    heatmap5, phase_matrix5 = calculate_amplitude_phase_matrix("/Users/sebastiandinu/Library/Mobile Documents/com~apple~CloudDocs/01 Projects/Tesi/re-identification-csi/mossa2_federica.csv")
+    heatmap4, phase_matrix4 = calculate_amplitude_phase_matrix("/Users/sebastiandinu/Library/Mobile Documents/com~apple~CloudDocs/01 Projects/Tesi/re-identification-csi/testing/mossa5_mara.csv")
+    heatmap5, phase_matrix5 = calculate_amplitude_phase_matrix("/Users/sebastiandinu/Library/Mobile Documents/com~apple~CloudDocs/01 Projects/Tesi/re-identification-csi/testing/mossa2_federica.csv")
 
     # sconosciuto
-    heatmap6, phase_matrix6 = calculate_amplitude_phase_matrix2("/Users/sebastiandinu/Library/Mobile Documents/com~apple~CloudDocs/01 Projects/Tesi/re-identification-csi/saluto2_sconosciuto.csv")
-    heatmap7, phase_matrix7 = calculate_amplitude_phase_matrix2("/Users/sebastiandinu/Library/Mobile Documents/com~apple~CloudDocs/01 Projects/Tesi/re-identification-csi/tPose2_sconosciuto.csv")
+    heatmap6, phase_matrix6 = calculate_amplitude_phase_matrix2("/Users/sebastiandinu/Library/Mobile Documents/com~apple~CloudDocs/01 Projects/Tesi/re-identification-csi/testing/saluto2_sconosciuto.csv")
+    heatmap7, phase_matrix7 = calculate_amplitude_phase_matrix2("/Users/sebastiandinu/Library/Mobile Documents/com~apple~CloudDocs/01 Projects/Tesi/re-identification-csi/testing/tPose2_sconosciuto.csv")
 
     # individuo 40
-    heatmap8, phase_matrix8 = calculate_amplitude_phase_matrix2("/Users/sebastiandinu/Library/Mobile Documents/com~apple~CloudDocs/01 Projects/Tesi/re-identification-csi/tPose3.csv")
+    heatmap8, phase_matrix8 = calculate_amplitude_phase_matrix2("/Users/sebastiandinu/Library/Mobile Documents/com~apple~CloudDocs/01 Projects/Tesi/re-identification-csi/testing/tPose3.csv")
 
     sebastian_tensor1 = transform(heatmap1) # heatmap already as an image
     sebastian_tensor2 = transform(heatmap2)
