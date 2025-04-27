@@ -1,0 +1,13 @@
+https://ieeexplore.ieee.org/document/9157423
+https://ieeexplore.ieee.org/document/9716741
+https://ieeexplore.ieee.org/document/8640834
+https://ieeexplore.ieee.org/document/9367546
+https://ieeexplore.ieee.org/document/8957623
+https://scikit-learn.org/stable/modules/clustering.html#k-means
+https://github.com/espressif/esp-csi/tree/master/examples/esp-radar/console_test
+https://ieeexplore.ieee.org/document/9660573
+https://en.wikipedia.org/wiki/Channel_state_information
+https://en.wikipedia.org/wiki/K-means_clustering
+https://ieeexplore.ieee.org/document/7835628
+https://ieeexplore.ieee.org/document/10217021
+https://ieeexplore.ieee.org/document/9336268
